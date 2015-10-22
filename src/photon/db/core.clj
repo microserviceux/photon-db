@@ -33,22 +33,3 @@
   (lazy-events [this stream-name date] [])
   (lazy-events-page [this stream-name date page] []))
 
-(defn -name->class [n]
-  (try
-    (let [c (Class/forName n)]
-      (if (.isAssignableFrom photon.db.core.DB c) c nil))
-    (catch Exception e nil)))
-
-(defn db-implementations
-  ([]
-   (flatten (pmap db-implementations (all-ns))))
-  ([one-ns]
-   (let [pkg (str (.getName (.getName one-ns)) ".")
-         symbs (map key (ns-map one-ns))
-         potential (filter #(.startsWith (.getName %) "map->") symbs)
-         class-names (map #(str pkg (subs (.getName %)
-                                          5 (count (.getName %))))
-                          potential)
-         classes (map -name->class class-names)]
-     (remove nil? classes))))
-
