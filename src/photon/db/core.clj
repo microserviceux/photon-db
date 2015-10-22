@@ -11,6 +11,7 @@
 (defn uuid [] (str (java.util.UUID/randomUUID)))
 
 (defprotocol DB
+  (driver-name [this])
   (fetch [this stream-name order-id])
   (delete! [this id])
   (delete-all! [this])
@@ -23,6 +24,7 @@
 
 (defrecord DBDummy []
   DB
+  (driver-name [this] "dummy")
   (fetch [this stream-name id] {})
   (delete! [this id])
   (delete-all! [this])
