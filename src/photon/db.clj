@@ -22,7 +22,7 @@
   (lazy-events [this stream-name date])
   (lazy-events-page [this stream-name date page]))
 
-(def set-records (ref #{}))
+(defonce set-records (ref #{}))
 
 (defn implementations [] (into [] @set-records))
 
