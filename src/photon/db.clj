@@ -36,7 +36,7 @@
   (let [tokens (clojure.string/split (.getName cn) #"\.")
         prefix (clojure.string/join "." (drop-last tokens))
         all (str prefix "/->" (last tokens))]
-    (println "Loading" prefix all)
+    (log/trace "Loading" prefix all)
     (require (symbol prefix))
     (eval (read-string all))))
 
