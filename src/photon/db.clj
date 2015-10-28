@@ -66,6 +66,8 @@
         nns (s/replace nn #"_" "-")]
     nns))
 
+(def all-loaded (ref false))
+
 (defn -load-db-plugins!
   ([jf]
    (let [files (filenames-in-jar jf)
@@ -79,12 +81,19 @@
                     (require (symbol n)))
                  matches))))
   ([]
-   (log/info "Finding backend plugin implementations...")
-   (let [jarfiles (classpath-jarfiles)]
-     (dorun (map -load-db-plugins! jarfiles)))))
+   (when (not @all-loaded)
+     (dosync
+       (log/info "Finding backend plugin implementations...")
+       (let [jarfiles (classpath-jarfiles)]
+         (dorun (map -load-db-plugins! jarfiles)))
+       (alter all-loaded (fn [_] true))))))
 
 (defn -find-implementation [conf impls n]
   (first (filter #(= n (driver-name (% conf))) impls)))
+
+(defn available-backends []
+  (-load-db-plugins!)
+  (implementations))
 
 (defn default-db [conf]
   (-load-db-plugins!)
