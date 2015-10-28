@@ -87,6 +87,7 @@
   (first (filter #(= n (driver-name (% conf))) impls)))
 
 (defn default-db [conf]
+  (-load-db-plugins!)
   (let [target (:db.backend conf)
         impls (implementations)
         chosen (-find-implementation conf impls target)]
@@ -100,6 +101,4 @@
       (do
         (log/info "Loaded backend for" target)
         (chosen conf)))))
-
-(-load-db-plugins!)
 
