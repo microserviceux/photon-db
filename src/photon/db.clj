@@ -34,7 +34,7 @@
   (let [tokens (clojure.string/split (.getName cn) #"\.")
         prefix (clojure.string/join "." (drop-last tokens))
         all (str prefix "/->" (last tokens))]
-    (log/trace "Loading" prefix all)
+    (log/info "Loading" prefix all)
     (require (symbol prefix))
     (eval (read-string all))))
 
@@ -43,19 +43,6 @@
     (let [r (apply (functionize defrecord) n args)]
       (alter set-records conj (class->record r))
       r)))
-
-(defdbplugin DBDummy [conf]
-  DB
-  (driver-name [this] "dummy")
-  (fetch [this stream-name id] {})
-  (delete! [this id])
-  (delete-all! [this])
-  (put [this data])
-  (search [this id] [])
-  (store [this payload])
-  (distinct-values [this k] [])
-  (lazy-events [this stream-name date] [])
-  (lazy-events-page [this stream-name date page] []))
 
 (defn -file->ns [f]
   (let [tokens (s/split f #"\.clj")
