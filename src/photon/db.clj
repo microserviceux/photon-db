@@ -25,65 +25,25 @@
   (lazy-events [this stream-name date])
   (lazy-events-page [this stream-name date page]))
 
-(defonce set-records (ref #{}))
-
-(defmacro functionize [macro]
-  `(fn [& args#] (eval (cons '~macro args#))))
-
-(defn class->record [cn]
-  (let [tokens (clojure.string/split (.getName cn) #"\.")
-        prefix (clojure.string/join "." (drop-last tokens))
-        all (str prefix "/->" (last tokens))]
-    (log/info "Loading" prefix all)
-    (require (symbol prefix))
-    (eval (read-string all))))
-
-(defmacro defdbplugin [n & args]
-  (dosync
-    (let [r (apply (functionize defrecord) n args)]
-      (alter set-records conj (class->record r))
-      r)))
-
-(defn -file->ns [f]
-  (let [tokens (s/split f #"\.clj")
-        main-part (s/join ".clj" tokens)
-        nn (s/replace main-part #"\/" ".")
-        nns (s/replace nn #"_" "-")]
-    nns))
-
-(defn -load-db-plugins!
-  ([jf]
-   (let [files (filenames-in-jar jf)
-         matches (filter #(and (.startsWith % "photon/db/")
-                               (.endsWith % ".clj"))
-                         files)
-         codes (map #(.getInputStream jf (.getEntry jf %)) matches)]
-     (dorun (map #(log/info "Loading" % "in" (.getName jf) "...") matches))
-     (dorun (map #(let [n (-file->ns %)]
-                    (log/trace "Requiring" n)
-                    (require (symbol n)))
-                 matches))))
-  ([]
-   (log/info "Finding backend plugin implementations...")
-   (let [jarfiles (classpath-jarfiles)]
-     (dorun (map -load-db-plugins! jarfiles)))))
-
-(defn -find-implementation [conf impls n]
-  (first (filter #(= n (driver-name (% conf))) impls)))
+(defn load-plugin [backend]
+  (let [ns-str (symbol (str "photon.db." backend))]
+    (require ns-str)
+    (let [symbs (ns-publics (find-ns ns-str))
+          candidate (first (filter #(.startsWith (name (key %)) "->") symbs))
+          f (val candidate)]
+      f)))
 
 (defn default-db [conf]
-  (-load-db-plugins!)
-  (let [target (:db.backend conf)
-        impls @set-records
-        chosen (-find-implementation conf impls target)]
-    (log/info "Backend implementations available:"
-              (map #(driver-name (% conf)) impls))
-    (if (nil? chosen)
-      (do
+  (let [target (:db.backend conf)]
+    (try
+      (load-plugin target)
+      ;; TODO: Reconsider exhaustive classpath search
+      #_(log/info "Backend implementations available:"
+                  (map #(driver-name (% conf)) impls))
+      (log/info "Loaded backend for" target)
+      (catch Exception e
         (log/error "Backend plugin for" target
-                   "not found, falling back to dummy")
-        ((-find-implementation conf impls "dummy") conf))
-      (do
-        (log/info "Loaded backend for" target)
-        (chosen conf)))))
+                   "not loaded, falling back to dummy")
+        (log/error "Cause of error:" (.getMessage e))
+        (load-plugin "dummy")))))
 

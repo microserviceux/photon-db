@@ -8,7 +8,7 @@
    :local-id (java.util.UUID/randomUUID)
    :server-timestamp (System/currentTimeMillis)})
 
-(db/defdbplugin DBDummy [conf]
+(defrecord DBDummy [conf]
   db/DB
   (db/driver-name [this] "dummy")
   (db/fetch [this stream-name id] (event))
