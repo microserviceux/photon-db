@@ -36,11 +36,12 @@
 (defn default-db [conf]
   (let [target (:db.backend conf)]
     (try
-      (load-plugin target)
-      ;; TODO: Reconsider exhaustive classpath search
-      #_(log/info "Backend implementations available:"
-                  (map #(driver-name (% conf)) impls))
-      (log/info "Loaded backend for" target)
+      (let [plugin (load-plugin target)]
+        ;; TODO: Reconsider exhaustive classpath search
+        #_(log/info "Backend implementations available:"
+                    (map #(driver-name (% conf)) impls))
+        (log/info "Loaded backend for" target)
+        plugin)
       (catch Exception e
         (log/error "Backend plugin for" target
                    "not loaded, falling back to dummy")
