@@ -27,8 +27,6 @@
 
 (defonce set-records (ref #{}))
 
-(defn implementations [] (into [] @set-records))
-
 (defmacro functionize [macro]
   `(fn [& args#] (eval (cons '~macro args#))))
 
@@ -66,8 +64,6 @@
         nns (s/replace nn #"_" "-")]
     nns))
 
-(def all-loaded (ref false))
-
 (defn -load-db-plugins!
   ([jf]
    (let [files (filenames-in-jar jf)
@@ -81,24 +77,17 @@
                     (require (symbol n)))
                  matches))))
   ([]
-   (when (not @all-loaded)
-     (dosync
-       (log/info "Finding backend plugin implementations...")
-       (let [jarfiles (classpath-jarfiles)]
-         (dorun (map -load-db-plugins! jarfiles)))
-       (alter all-loaded (fn [_] true))))))
+   (log/info "Finding backend plugin implementations...")
+   (let [jarfiles (classpath-jarfiles)]
+     (dorun (map -load-db-plugins! jarfiles)))))
 
 (defn -find-implementation [conf impls n]
   (first (filter #(= n (driver-name (% conf))) impls)))
 
-(defn available-backends []
-  (-load-db-plugins!)
-  (implementations))
-
 (defn default-db [conf]
   (-load-db-plugins!)
   (let [target (:db.backend conf)
-        impls (implementations)
+        impls @set-records
         chosen (-find-implementation conf impls target)]
     (log/info "Backend implementations available:"
               (map #(driver-name (% conf)) impls))
