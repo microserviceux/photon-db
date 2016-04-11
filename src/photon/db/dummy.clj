@@ -5,8 +5,7 @@
   {:stream-name "cambio"
    :payload {:test :ok}
    :service-id "muon://dummy"
-   :local-id (java.util.UUID/randomUUID)
-   :server-timestamp (System/currentTimeMillis)})
+   :event-type "dummy"})
 
 (defrecord DBDummy [conf]
   db/DB
