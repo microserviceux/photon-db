@@ -4,7 +4,7 @@
 
 (defn event [id stream-name]
   {:stream-name stream-name
-   :payload {:test :ok}
+   :payload {:test "ok"}
    :order-id id
    :service-id "muon://dummy"
    :event-type "dummy"})
