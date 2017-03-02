@@ -1,23 +1,29 @@
 (ns photon.db.dummy
   (:require [photon.db :as db]))
 
-(defn event []
-  {:stream-name "cambio"
-   :payload {:test :ok}
-   :service-id "muon://dummy"
-   :event-type "dummy"})
+(def in-mem (ref {}))
 
 (defrecord DBDummy [conf]
   db/DB
-  (db/driver-name [this] "dummy")
-  (db/fetch [this stream-name id] (event))
-  (db/delete! [this id])
-  (db/delete-all! [this])
-  (db/put [this data])
-  (db/search [this id] [(event)])
-  (db/store [this payload])
-  (db/distinct-values [this k] ["cambio"])
+  (db/driver-name [this]
+    "dummy")
+  (db/fetch [this stream-name id]
+    (first (filter #(and (= (:order-id %) id) (= (:stream-name %) stream-name))
+                   (get @in-mem this))))
+  (db/delete! [this id]
+    (dosync
+     (alter in-mem update this (fn [old]
+                                 (into [] (remove #(= (:order-id %) id) old))))))
+  (db/delete-all! [this]
+    (dosync (alter in-mem dissoc this)))
+  (db/search [this id]
+    (filter #(= (:order-id %) id) (mapcat val @in-mem)))
+  (db/store [this payload]
+    (dosync
+     (alter in-mem update this (fn [old] (into [] (conj old payload))))))
+  (db/distinct-values [this k]
+    (into #{} (map #(get % k) (mapcat val @in-mem))))
   (db/lazy-events [this stream-name date]
-                  (repeatedly event))
-  (db/lazy-events-page [this stream-name date page] []))
-
+    (let [pattern (clojure.string/replace stream-name #"\*\*" "(.*)")
+          regex (re-pattern pattern)]
+      (filter #(re-matches regex (:stream-name %)) (mapcat val @in-mem)))))

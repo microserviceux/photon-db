@@ -18,12 +18,10 @@
   (fetch [this stream-name order-id])
   (delete! [this id])
   (delete-all! [this])
-  (put [this data])
   (search [this id])
   (store [this payload])
   (distinct-values [this k])
-  (lazy-events [this stream-name date])
-  (lazy-events-page [this stream-name date page]))
+  (lazy-events [this stream-name date]))
 
 (defn load-plugin [backend]
   (let [ns-str (symbol (str "photon.db." backend))]
