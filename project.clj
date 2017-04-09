@@ -1,4 +1,4 @@
-(defproject tranchis/photon-db "0.10.2"
+(defproject tranchis/photon-db "0.10.4"
   :description "Database interface for the Photon eventstore"
   :url "http://example.com/FIXME"
   :license {:name "GNU Affero General Public License Version 3"

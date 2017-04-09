@@ -13,7 +13,7 @@
   (let [ev (event 1 "st")]
     (db/store impl (event 1 "st"))
     (assert (= (db/fetch impl "st" 1) ev))
-    (db/delete! impl 1)
+    (db/delete! impl "st" 1)
     (assert (= (db/fetch impl "st" 1) nil))
     (db/store impl (event 1 "st"))
     (db/store impl (event 2 "st"))

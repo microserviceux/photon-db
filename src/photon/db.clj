@@ -16,7 +16,7 @@
 (defprotocol DB
   (driver-name [this])
   (fetch [this stream-name order-id])
-  (delete! [this id])
+  (delete! [this stream-name order-id])
   (delete-all! [this])
   (search [this id])
   (store [this payload])
