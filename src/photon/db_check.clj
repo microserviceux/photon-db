@@ -44,6 +44,13 @@
       (assert (= (count all) 6000)))
     (let [all (db/lazy-events impl "**" 0)]
       (assert (= (count all) 6000)))
+    (let [all (db/lazy-events impl "**" 0)
+          first-ts (inc (:order-id (first all)))
+          last-ts (:order-id (last all))
+          all-minus-one (db/lazy-events impl "**" first-ts)
+          only-one (db/lazy-events impl "**" last-ts)]
+      (assert (= (count all-minus-one) 5999))
+      (assert (= (count only-one) 1)))
     (db/delete-all! impl)
     (let [all (db/lazy-events impl "**" 0)]
       (assert (= (count all) 0)))

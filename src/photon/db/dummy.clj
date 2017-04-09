@@ -25,5 +25,8 @@
     (into #{} (map #(get % k) (mapcat val @in-mem))))
   (db/lazy-events [this stream-name date]
     (let [pattern (clojure.string/replace stream-name #"\*\*" "(.*)")
-          regex (re-pattern pattern)]
-      (filter #(re-matches regex (:stream-name %)) (mapcat val @in-mem)))))
+          regex (re-pattern pattern)
+          int-date (if (string? date) (read-string date) date)]
+      (filter #(and (re-matches regex (:stream-name %))
+                    (>= (:order-id %) int-date))
+              (mapcat val @in-mem)))))
