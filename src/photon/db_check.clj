@@ -51,6 +51,12 @@
           only-one (db/lazy-events impl "**" last-ts)]
       (assert (= (count all-minus-one) 5999))
       (assert (= (count only-one) 1)))
+    (let [all (db/lazy-events impl "st/3" 0)]
+      (dorun (map #(db/delete! impl "st/3" (:order-id %)) all)))
+    (let [all (db/lazy-events impl "st/3" 0)]
+      (assert (= (count all) 0)))
+    (let [all (db/lazy-events impl "**" 0)]
+      (assert (= (count all) 5000)))
     (db/delete-all! impl)
     (let [all (db/lazy-events impl "**" 0)]
       (assert (= (count all) 0)))
